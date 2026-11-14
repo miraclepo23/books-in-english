@@ -72,6 +72,7 @@ def main():
     for i, r in enumerate(rows):
         t = col(r, "Название")
         if not t: continue
+        num = re.sub(r"\D", "", col(r, "№"))
         price_raw = col(r, "Цена")
         try: price = int(float(re.sub(r"[^\d.,]", "", price_raw).replace(",", ".") or 0))
         except ValueError: price = 0; warnings.append(f"{t}: цена «{price_raw}» не число")
@@ -80,8 +81,14 @@ def main():
         cond = col(r, "Состояние"); cond_en = COND_EN.get(cond.lower(), cond)
         sec = col(r, "Раздел"); sec_en = SECTION_EN.get(sec.lower(), sec) or "Other"
         folder = col(r, "Папка")
+        if not folder and num and photos and os.path.isdir(photos):
+            for d in sorted(os.listdir(photos)):
+                m = re.match(r"\s*№?\s*(\d+)(\D|$)", d)
+                if m and m.group(1).lstrip("0") == num.lstrip("0") and os.path.isdir(os.path.join(photos, d)):
+                    folder = d; break
         ig = col(r, "Фото из Instagram")
-        sid = slug(t) + (f"-{i}" if any(b["id"] == slug(t) for b in books) else "")
+        sid = num if num else slug(t) + (f"-{i}" if any(b["id"] == slug(t) for b in books) else "")
+        if num and any(b["id"] == num for b in books): warnings.append(f"№{num}: номер повторяется — у каждой книги должен быть свой"); sid = f"{num}-{i}"
         gallery, video = [], ""
         if photos and folder:
             fdir = os.path.join(photos, folder)
@@ -100,7 +107,7 @@ def main():
                             video = f"video/{sid}{'.webm' if ext=='.webm' else '.mp4'}"
                             shutil.copy(os.path.join(fdir, f), os.path.join(out, video))
             else:
-                warnings.append(f"{t}: папка «{folder}» не найдена в «Фото книг»")
+                warnings.append(f"№{num} {t}: папка «{folder}» не найдена в «Фото книг»")
         cover = gallery[0] if gallery else (f"img/{ig}.jpg" if ig and os.path.exists(os.path.join(out, "img", ig + ".jpg")) else "")
         if not cover: warnings.append(f"{t}: нет ни одного фото")
         d = desc.get(t, {})
@@ -112,7 +119,7 @@ def main():
         publisher = pick("Издательство", "publisher"); about = pick("О книге", "about")
         if not (pages or about) and filled != "ок": need_desc.append(t)
         books.append({
-            "id": sid, "order": n - i, "t": t, "a": col(r, "Автор"), "g": sec_en, "cond": cond_en, "price": price, "st": st,
+            "id": sid, "num": num, "order": int(num) if num else n - i, "t": t, "a": col(r, "Автор"), "g": sec_en, "cond": cond_en, "price": price, "st": st,
             "cover": cover, "gallery": gallery[1:], "video": video, "reel": col(r, "Ссылка на видео"),
             "pages": pages, "binding": BIND_EN.get(binding.lower(), binding), "year": year, "publisher": publisher,
             "about": about, "note": col(r, "Заметка"),
