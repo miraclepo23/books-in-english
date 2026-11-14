@@ -67,7 +67,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .dm{position:relative;background:var(--bg);border-radius:20px;padding:22px 20px 18px;max-width:520px;width:100%;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
 .dm h2{font-family:"Caveat Brush",cursive;font-weight:400;font-size:34px;line-height:1;color:var(--pinkink);padding-right:44px}
 .dmhint{margin:8px 0 12px;color:var(--mut);font-size:15px}
-.dmtext{font:inherit;font-size:14.5px;white-space:pre-wrap;word-break:break-word;background:var(--pink2);border-radius:12px;padding:12px 14px;margin:0 0 14px}
+.dmtext{-webkit-user-select:all;user-select:all;font:inherit;font-size:14.5px;white-space:pre-wrap;word-break:break-word;background:var(--pink2);border-radius:12px;padding:12px 14px;margin:0 0 14px}
 @media(min-width:600px){.dmveil{align-items:center}}
 .meta{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .meta .t{font-weight:600;line-height:1.25}
@@ -192,15 +192,24 @@ const dmText = b => b.st==="sold" ? `Hi! I'd like to pre-order "${b.t}". — ${b
 const dmLink = b => "https://ig.me/m/" + SHOP.ig + "?text=" + encodeURIComponent(dmText(b));
 let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),4000); }
 function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; openDM(dmText(b)); }
+function copyText(txt){ // works in iOS Safari and in Instagram's in-app browser
+  let ok=false;
+  try{ const ta=document.createElement("textarea"); ta.value=txt; ta.setAttribute("readonly",""); ta.style.cssText="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px";
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, txt.length); ok=document.execCommand("copy"); ta.remove(); }catch(e){}
+  if(!ok && navigator.clipboard){ return navigator.clipboard.writeText(txt).then(()=>true,()=>false); }
+  if(ok && navigator.clipboard){ try{ navigator.clipboard.writeText(txt).catch(()=>{}); }catch(e){} }
+  return Promise.resolve(ok);
+}
+function selectDM(){ const el=document.getElementById("dmtext"); const r=document.createRange(); r.selectNodeContents(el); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); }
 function openDM(txt){
   document.getElementById("dmtext").textContent=txt; document.getElementById("dmgo").href="https://ig.me/m/"+SHOP.ig+"?text="+encodeURIComponent(txt);
   const h=document.getElementById("dmh"); h.textContent="Copying…";
-  try{ navigator.clipboard.writeText(txt).then(()=>{h.textContent="Message copied ✓";},()=>{h.textContent="Copy the message below";}); }catch(e){ h.textContent="Copy the message below"; }
+  copyText(txt).then(ok=>{ h.textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); });
   document.getElementById("dmveil").classList.add("on"); document.getElementById("dmgo").focus(); }
 document.getElementById("findbtn").addEventListener("click",e=>{ e.preventDefault(); openDM("Hi! I'm looking for a book: "); });
 function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
-  if(e.target.id==="dmcopy"){ try{ navigator.clipboard.writeText(document.getElementById("dmtext").textContent).then(()=>{document.getElementById("dmh").textContent="Message copied ✓";}); }catch(err){} } });
+  if(e.target.id==="dmcopy"){ copyText(document.getElementById("dmtext").textContent).then(ok=>{ document.getElementById("dmh").textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); }); } });
 const DATA = window.CATALOG || {books:[]};
 const BOOKS = DATA.books.slice();
 const ST = {in:"Available",res:"Reserved",sold:"Pre-order"};
@@ -290,7 +299,7 @@ const close = () => { $("#veil").classList.remove("on"); cur = null;
   if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} } };
 async function copyLink(){
   const btn = $("#copy"); if(!btn||!cur) return; const url = bookLink(cur);
-  try { await navigator.clipboard.writeText(url); btn.textContent = "Link copied"; btn.classList.add("ok"); }
+  try { if(!(await copyText(url))) throw 0; btn.textContent = "Link copied"; btn.classList.add("ok"); }
   catch(e){ btn.textContent = url; btn.style.fontSize = "12px"; }
   setTimeout(()=>{ if($("#copy")){ $("#copy").textContent="Copy link"; $("#copy").classList.remove("ok"); $("#copy").style.fontSize=""; } }, 2500);
 }
