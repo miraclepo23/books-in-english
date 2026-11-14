@@ -72,6 +72,15 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .st.in{color:var(--ok)}.st.res{color:var(--res)}.st.order{color:var(--ord)}.st.sold{color:var(--mut)}
 .empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:48px 0}
 .foot{border-top:1px solid var(--line);color:var(--mut);font-size:15px;text-align:center}
+.svc{background:var(--pink2)}
+.svcin{display:grid;grid-template-columns:120px minmax(0,1fr);gap:28px;align-items:center;max-width:820px}
+.svcart{width:120px;height:120px}
+.svc h2{font-family:"Caveat Brush",cursive;font-weight:400;font-size:clamp(34px,5vw,46px);line-height:1;color:var(--pinkink)}
+.svc p{margin:10px 0 0;max-width:56ch}
+.svc .fee{font-size:17px}
+.svc .fee b{color:var(--pinkink);font-size:20px}
+.svc .btns{margin-top:16px}
+@media(max-width:600px){.svcin{grid-template-columns:1fr;gap:12px;text-align:center}.svcart{margin:0 auto;width:90px;height:90px}.svc p{margin-inline:auto}.svc .btns{justify-content:center}}
 .foot a{color:var(--pinkink);font-weight:600}
 /* detail sheet */
 .veil{position:fixed;inset:0;background:rgba(40,15,28,.6);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}
@@ -122,7 +131,7 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
   <div class="wrap">
     <h1>Books in English <span>book store · Tbilisi</span></h1>
     <p class="sub">English books with history</p>
-    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy. Everything marked <b>available</b> is on the shelf right now. To reserve, message <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a>.</p>
+    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy. Everything marked <b>available</b> is on the shelf right now. To reserve, message <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a>. Looking for something that isn't here? <a href="#find">I can find it for you</a>.</p>
     <div class="stats" id="stats"></div>
   </div>
 </header>
@@ -143,6 +152,15 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
   <div class="grid" id="grid"><div class="empty">Loading the shelf…</div></div>
 </div></main>
 
+<section class="band svc" id="find" aria-labelledby="svch"><div class="wrap svcin">
+  <svg class="svcart" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#e8468a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="30" width="44" height="62" rx="4" fill="#f6d3e1"/><path d="M30 44h28M30 54h22"/><circle cx="76" cy="66" r="18" fill="#fff"/><path d="M89 79l14 14"/></g><g fill="#e8468a"><path d="M98 18l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/><circle cx="18" cy="20" r="3"/></g></svg>
+  <div>
+    <h2 id="svch">Looking for a particular book?</h2>
+    <p>Tell me the title — I'll search for it in the US and England and bring it to you in Tbilisi.</p>
+    <p class="fee"><b>30&nbsp;₾</b> for search and delivery per order — the same whether it's one book or ten.</p>
+    <div class="btns"><a class="btn" id="findbtn" href="https://ig.me/m/books_in_english_tbilisi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg> Ask for a book</a></div>
+  </div>
+</div></section>
 <footer class="band foot"><div class="wrap">
   To order or reserve, send a direct message on Instagram: <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a> · Pickup in Tbilisi or delivery across Georgia · Prices in Georgian lari.<br><span id="upd"></span>
 </div></footer>
@@ -166,11 +184,13 @@ const bookLink = b => SHOP.page + "#" + b.id;
 const dmText = b => b.st==="sold" ? `Hi! Could you order a copy of "${b.t}" for me? — ${bookLink(b)}` : `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
 const dmLink = b => "https://ig.me/m/" + SHOP.ig + "?text=" + encodeURIComponent(dmText(b));
 let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),4000); }
-function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; const txt=dmText(b);
-  document.getElementById("dmtext").textContent=txt; document.getElementById("dmgo").href=dmLink(b);
+function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; openDM(dmText(b)); }
+function openDM(txt){
+  document.getElementById("dmtext").textContent=txt; document.getElementById("dmgo").href="https://ig.me/m/"+SHOP.ig+"?text="+encodeURIComponent(txt);
   const h=document.getElementById("dmh"); h.textContent="Copying…";
   try{ navigator.clipboard.writeText(txt).then(()=>{h.textContent="Message copied ✓";},()=>{h.textContent="Copy the message below";}); }catch(e){ h.textContent="Copy the message below"; }
   document.getElementById("dmveil").classList.add("on"); document.getElementById("dmgo").focus(); }
+document.getElementById("findbtn").addEventListener("click",e=>{ e.preventDefault(); openDM("Hi! I'm looking for a book: "); });
 function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
   if(e.target.id==="dmcopy"){ try{ navigator.clipboard.writeText(document.getElementById("dmtext").textContent).then(()=>{document.getElementById("dmh").textContent="Message copied ✓";}); }catch(err){} } });
@@ -241,6 +261,7 @@ function open(id){
    ${b.about?`<p class="about">${esc(b.about)}</p>`:""}
    ${b.auto?`<p class="auto">Book details compiled from public sources; the photos show the actual copy.</p>`:""}
    ${b.note?`<p class="note">${esc(b.note)}</p>`:""}
+   ${b.st==="sold"?`<p class="auto">This copy is sold, but I can order another one: <b>30&nbsp;₾</b> for search and delivery per order, however many books are in it.</p>`:""}
    <div class="btns">
    <a class="btn" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via Instagram":b.st==="sold"?"Ask to order a copy":"Join waiting list"}</a>
    ${b.reel?`<a class="btn ghost" href="${esc(b.reel)}" target="_blank" rel="noopener">▶ Watch video</a>`:""}
