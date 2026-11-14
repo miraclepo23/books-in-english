@@ -79,6 +79,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .svc p{margin:10px 0 0;max-width:56ch}
 .svc .fee{font-size:17px}
 .svc .fee b{color:var(--pinkink);font-size:20px}
+.svc .small{font-size:14.5px;color:var(--mut);margin-top:4px}
 .svc .btns{margin-top:16px}
 @media(max-width:600px){.svcin{grid-template-columns:1fr;gap:12px;text-align:center}.svcart{margin:0 auto;width:90px;height:90px}.svc p{margin-inline:auto}.svc .btns{justify-content:center}}
 .foot a{color:var(--pinkink);font-weight:600}
@@ -157,7 +158,8 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
   <div>
     <h2 id="svch">Looking for a particular book?</h2>
     <p>Tell me the title — I'll search for it in the US and England and bring it to you in Tbilisi.</p>
-    <p class="fee"><b>30&nbsp;₾</b> for search and delivery per order — the same whether it's one book or ten.</p>
+    <p class="fee"><b>30&nbsp;₾</b> per order for my help with finding and delivering the books — the same whether it's one book or ten.</p>
+    <p class="small">The price of the books and the shipping cost are paid separately.</p>
     <div class="btns"><a class="btn" id="findbtn" href="https://ig.me/m/books_in_english_tbilisi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg> Ask for a book</a></div>
   </div>
 </div></section>
@@ -261,7 +263,7 @@ function open(id){
    ${b.about?`<p class="about">${esc(b.about)}</p>`:""}
    ${b.auto?`<p class="auto">Book details compiled from public sources; the photos show the actual copy.</p>`:""}
    ${b.note?`<p class="note">${esc(b.note)}</p>`:""}
-   ${b.st==="sold"?`<p class="auto">This copy is sold, but I can order another one: <b>30&nbsp;₾</b> for search and delivery per order, however many books are in it.</p>`:""}
+   ${b.st==="sold"?`<p class="auto">This copy is sold, but I can order another one. My help with finding and delivering costs <b>30&nbsp;₾</b> per order, however many books are in it; the books and shipping are paid separately.</p>`:""}
    <div class="btns">
    <a class="btn" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via Instagram":b.st==="sold"?"Ask to order a copy":"Join waiting list"}</a>
    ${b.reel?`<a class="btn ghost" href="${esc(b.reel)}" target="_blank" rel="noopener">▶ Watch video</a>`:""}
