@@ -22,7 +22,7 @@ def slug(s):
 STATUS = {"в наличии": "in", "наличие": "in", "есть": "in", "available": "in",
           "бронь": "res", "забронирована": "res", "reserved": "res",
           "под заказ": "sold", "заказ": "sold", "order": "sold",
-          "продана": "sold", "продано": "sold", "sold": "sold"}
+          "продана": "sold", "продано": "sold", "sold": "sold", "предзаказ": "sold"}
 COND_EN = {"новая": "New", "б/у, как новая": "Used, like new", "б/у, очень хорошее": "Used, very good",
            "б/у, хорошее": "Used, good", "б/у, отличное": "Used, excellent", "б/у, удовлетворительное": "Used, fair"}
 SECTION_EN = {"детские": "Children", "pop-up": "Pop-up", "искусство и дизайн": "Art & design",

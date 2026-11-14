@@ -48,7 +48,6 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .cov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .cov .ph{position:absolute;inset:0;padding:16px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:"Caveat Brush",cursive;font-size:24px;color:var(--pinkink)}
 .book:hover .cov{transform:translateY(-4px) rotate(-.8deg)}
-.sold .cov img{filter:grayscale(.9) brightness(.9);opacity:.55}
 .tag{position:absolute;left:8px;top:10px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:6px;background:var(--paper);color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .tag.v{left:auto;right:8px;background:var(--pink);color:#fff}
 .send{position:absolute;right:8px;bottom:8px;width:40px;height:40px;border-radius:20px;border:0;background:rgba(255,255,255,.92);color:var(--pinkink);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);text-decoration:none}
@@ -70,7 +69,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .au{font-size:14px;color:var(--mut);margin-top:-6px;line-height:1.3}
 .price{font-weight:800;font-size:17px;white-space:nowrap;color:var(--pinkink)}
 .st{font-size:13.5px}
-.st.in{color:var(--ok)}.st.res{color:var(--res)}.st.order{color:var(--ord)}.st.sold{color:var(--mut)}
+.st.in{color:var(--ok)}.st.res{color:var(--res)}.st.sold{color:var(--ord)}
 .empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:48px 0}
 .foot{border-top:1px solid var(--line);color:var(--mut);font-size:15px;text-align:center}
 .svc{background:var(--pink2)}
@@ -184,7 +183,7 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
 const SHOP = {ig:"books_in_english_tbilisi", cur:"₾", page:"https://miraclepo23.github.io/books-in-english/"};
 const PLANE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>`;
 const bookLink = b => SHOP.page + "#" + b.id;
-const dmText = b => b.st==="sold" ? `Hi! Could you order a copy of "${b.t}" for me? — ${bookLink(b)}` : `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
+const dmText = b => b.st==="sold" ? `Hi! I'd like to pre-order "${b.t}". — ${bookLink(b)}` : `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
 const dmLink = b => "https://ig.me/m/" + SHOP.ig + "?text=" + encodeURIComponent(dmText(b));
 let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),4000); }
 function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; openDM(dmText(b)); }
@@ -199,7 +198,7 @@ document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id===
   if(e.target.id==="dmcopy"){ try{ navigator.clipboard.writeText(document.getElementById("dmtext").textContent).then(()=>{document.getElementById("dmh").textContent="Message copied ✓";}); }catch(err){} } });
 const DATA = window.CATALOG || {books:[]};
 const BOOKS = DATA.books.slice();
-const ST = {in:"Available",res:"Reserved",sold:"Sold · can be ordered again"};
+const ST = {in:"Available",res:"Reserved",sold:"Pre-order"};
 BOOKS.forEach(b=>{ if(b.st==="order") b.st="sold"; });
 const $ = s => document.querySelector(s);
 const esc = s => String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
@@ -213,14 +212,14 @@ if (genres.includes(gv)) $("#genre").value = gv;
 }
 if (DATA.updated) $("#upd").textContent = "List updated "+DATA.updated+".";
 
-const filters = [["in","Available"],["all","All"],["sold","Sold"]];
+const filters = [["in","Available"],["sold","Pre-order"],["all","All"]];
 $("#stf").innerHTML = filters.map(([k,l])=>`<button class="chip" data-k="${k}" aria-pressed="${k===st}">${l}</button>`).join("");
 const genres = [...new Set(BOOKS.map(b=>b.g).filter(Boolean))].sort();
 $("#genre").innerHTML = `<option value="">All sections</option>`+genres.map(g=>`<option>${esc(g)}</option>`).join("");
 
 const cover = (b, withSend) => `<div class="cov">
   ${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:`<div class="ph">${esc(b.t)}</div>`}
-  ${b.st!=="in"?`<span class="tag">${b.st==="sold"?"Sold":ST[b.st]}</span>`:""}
+  ${b.st!=="in"?`<span class="tag">${ST[b.st]}</span>`:""}
   ${(b.video||b.reel)?`<span class="tag v">▶ video</span>`:""}
   ${withSend?`<a class="send" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener" title="Send this book to the shop's Instagram DM" aria-label="Message the shop about ${esc(b.t)}">${PLANE}</a>`:""}</div>`;
 
@@ -270,9 +269,9 @@ function open(id){
    ${b.about?`<p class="about">${esc(b.about)}</p>`:""}
    ${b.auto?`<p class="auto">Book details compiled from public sources; the photos show the actual copy.</p>`:""}
    ${b.note?`<p class="note">${esc(b.note)}</p>`:""}
-   ${b.st==="sold"?`<p class="auto">This copy is sold, but I can order another one. My help with finding and delivering costs <b>30&nbsp;₾</b> per order, however many books are in it; the books and shipping are paid separately.</p>`:""}
+   ${b.st==="sold"?`<p class="auto">Available to pre-order: I'll order a copy for you. My help with finding and delivering costs <b>30&nbsp;₾</b> per order, however many books are in it; the books and shipping are paid separately.</p>`:""}
    <div class="btns">
-   <a class="btn" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via Instagram":b.st==="sold"?"Ask to order a copy":"Join waiting list"}</a>
+   <a class="btn" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via Instagram":b.st==="sold"?"Pre-order via Instagram":"Join waiting list"}</a>
    ${b.reel?`<a class="btn ghost" href="${esc(b.reel)}" target="_blank" rel="noopener">▶ Watch video</a>`:""}
    <button class="copy" id="copy" type="button">Copy link</button>
    </div>
@@ -325,7 +324,7 @@ function parseCSV(t){ const rows=[]; let row=[], f="", q=false;
     else if (c==='\n'||c==='\r'){ if (c==='\r'&&t[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=""; }
     else f+=c; }
   if (f!==""||row.length){ row.push(f); rows.push(row); } return rows; }
-const MAP_ST = {"в наличии":"in","наличие":"in","есть":"in","available":"in","бронь":"res","забронирована":"res","reserved":"res","продана":"sold","продано":"sold","sold":"sold","под заказ":"sold"};
+const MAP_ST = {"в наличии":"in","наличие":"in","есть":"in","available":"in","бронь":"res","забронирована":"res","reserved":"res","предзаказ":"sold","pre-order":"sold","продана":"sold","продано":"sold","sold":"sold","под заказ":"sold"};
 const MAP_COND = {"новая":"New","б/у, как новая":"Used, like new","б/у, очень хорошее":"Used, very good","б/у, хорошее":"Used, good","б/у, отличное":"Used, excellent","б/у, удовлетворительное":"Used, fair"};
 const MAP_SEC = {"детские":"Children","pop-up":"Pop-up","искусство и дизайн":"Art & design","каллиграфия":"Calligraphy & lettering","иллюстрированные для взрослых":"Illustrated for grown-ups","рождество":"Christmas","классика":"Classics","поэзия":"Poetry"};
 const MAP_BIND = {"твёрдый":"Hardcover","твердый":"Hardcover","мягкий":"Paperback"};
