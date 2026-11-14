@@ -123,7 +123,7 @@ def main():
             "cover": cover, "gallery": gallery[1:], "video": video, "reel": col(r, "Ссылка на видео"),
             "pages": pages, "binding": BIND_EN.get(binding.lower(), binding), "year": year, "publisher": publisher,
             "about": about, "note": col(r, "Заметка"),
-            "auto": bool(d) and filled != "ок" and not col(r, "О книге"),
+            "auto": filled == "авто" or (bool(d) and filled != "ок" and not col(r, "О книге")),
         })
     with open(os.path.join(out, "data.js"), "w", encoding="utf-8") as f:
         f.write("window.CATALOG=" + json.dumps({"books": books}, ensure_ascii=False) + ";")
