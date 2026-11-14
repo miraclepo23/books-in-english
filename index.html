@@ -57,6 +57,13 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .copy.ok{border-color:var(--ok);color:var(--ok)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:600;font-size:15px;max-width:min(92vw,420px);text-align:center;opacity:0;pointer-events:none;transition:.25s;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .toast.on{opacity:1;transform:translateX(-50%)}
+.dmveil{position:fixed;inset:0;background:rgba(40,15,28,.6);display:none;align-items:flex-end;justify-content:center;z-index:40;padding:12px}
+.dmveil.on{display:flex}
+.dm{position:relative;background:var(--bg);border-radius:20px;padding:22px 20px 18px;max-width:520px;width:100%;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
+.dm h2{font-family:"Caveat Brush",cursive;font-weight:400;font-size:34px;line-height:1;color:var(--pinkink);padding-right:44px}
+.dmhint{margin:8px 0 12px;color:var(--mut);font-size:15px}
+.dmtext{font:inherit;font-size:14.5px;white-space:pre-wrap;word-break:break-word;background:var(--pink2);border-radius:12px;padding:12px 14px;margin:0 0 14px}
+@media(min-width:600px){.dmveil{align-items:center}}
 .meta{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .meta .t{font-weight:600;line-height:1.25}
 .au{font-size:14px;color:var(--mut);margin-top:-6px;line-height:1.3}
@@ -141,6 +148,13 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
 </div></footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="dmveil" id="dmveil"><div class="dm" role="dialog" aria-modal="true" aria-labelledby="dmh">
+  <button class="x" id="dmclose" aria-label="Close">×</button>
+  <h2 id="dmh">Message copied ✓</h2>
+  <p class="dmhint">Open the shop's Instagram chat and <b>paste</b> it — hold the message field and tap “Paste”.</p>
+  <pre class="dmtext" id="dmtext"></pre>
+  <div class="btns"><a class="btn" id="dmgo" href="#" target="_blank" rel="noopener">Open Instagram chat</a><button class="copy" id="dmcopy" type="button">Copy again</button></div>
+</div></div>
 <div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="dt"><div class="sheet" id="sheet"></div></div>
 
 <script src="data.js"></script>
@@ -152,7 +166,14 @@ const bookLink = b => SHOP.page + "#" + b.id;
 const dmText = b => `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
 const dmLink = b => "https://ig.me/m/" + SHOP.ig + "?text=" + encodeURIComponent(dmText(b));
 let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),4000); }
-function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; try{ navigator.clipboard.writeText(dmText(b)).then(()=>toast("Message copied — paste it into the Instagram chat"), ()=>toast("Opening Instagram — mention \""+b.t+"\"")); }catch(e){ toast("Opening Instagram — mention \""+b.t+"\""); } }
+function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; const txt=dmText(b);
+  document.getElementById("dmtext").textContent=txt; document.getElementById("dmgo").href=dmLink(b);
+  const h=document.getElementById("dmh"); h.textContent="Copying…";
+  try{ navigator.clipboard.writeText(txt).then(()=>{h.textContent="Message copied ✓";},()=>{h.textContent="Copy the message below";}); }catch(e){ h.textContent="Copy the message below"; }
+  document.getElementById("dmveil").classList.add("on"); document.getElementById("dmgo").focus(); }
+function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
+document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
+  if(e.target.id==="dmcopy"){ try{ navigator.clipboard.writeText(document.getElementById("dmtext").textContent).then(()=>{document.getElementById("dmh").textContent="Message copied ✓";}); }catch(err){} } });
 const DATA = window.CATALOG || {books:[]};
 const BOOKS = DATA.books;
 const ST = {in:"Available",res:"Reserved",order:"Can be ordered",sold:"Sold"};
@@ -245,16 +266,17 @@ $("#stf").addEventListener("click",e=>{const k=e.target.closest(".chip")?.datase
 $("#q").addEventListener("input",render);
 $("#genre").addEventListener("change",render);
 $("#sort").addEventListener("change",render);
-$("#grid").addEventListener("click",e=>{ const sd=e.target.closest(".send"); if(sd){ primeDM(sd.dataset.dm); return; } const b=e.target.closest(".book"); if(b) open(b.dataset.id);});
+$("#grid").addEventListener("click",e=>{ const sd=e.target.closest(".send"); if(sd){ e.preventDefault(); primeDM(sd.dataset.dm); return; } const b=e.target.closest(".book"); if(b) open(b.dataset.id);});
 $("#grid").addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("book")){ e.preventDefault(); open(e.target.dataset.id);} });
 $("#veil").addEventListener("click",e=>{
   if(e.target.id==="veil"||e.target.id==="close") return close();
   if(e.target.closest("#copy")) return copyLink();
-  const dm=e.target.closest("[data-dm]"); if(dm){ primeDM(dm.dataset.dm); return; }
+  const dm=e.target.closest("[data-dm]"); if(dm){ e.preventDefault(); primeDM(dm.dataset.dm); return; }
   const n=e.target.closest(".nav"); if(n&&cur){const m=media(cur).length; idx=(idx+ +n.dataset.d+m)%m; drawMain(); return;}
   const t=e.target.closest(".thumbs button"); if(t){idx=+t.dataset.i; drawMain();}
 });
 document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && document.getElementById("dmveil").classList.contains("on")) return closeDM();
   if(!cur) return;
   if(e.key==="Escape") close();
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const m=media(cur).length; if(m>1){idx=(idx+(e.key==="ArrowRight"?1:-1)+m)%m; drawMain();}}
