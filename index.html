@@ -102,7 +102,7 @@ a.btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;st
 a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--pink)}
 .gal{display:flex;flex-direction:column;gap:10px}
 .main{position:relative;border-radius:14px;overflow:hidden;background:var(--pink2);aspect-ratio:4/5}
-.main img,.main video{width:100%;height:100%;object-fit:contain;display:block;background:light-dark(#f0e8dc,#120d10)}
+.main img,.main video,.main iframe{border:0;width:100%;height:100%;object-fit:contain;display:block;background:light-dark(#f0e8dc,#120d10)}
 .main .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:22px;border:0;background:rgba(255,255,255,.9);color:#2a2326;font-size:22px;cursor:pointer}
 .main .nav.l{left:8px}.main .nav.r{right:8px}
 .main .cnt{position:absolute;right:10px;bottom:10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:10px}
@@ -198,7 +198,7 @@ function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
   if(e.target.id==="dmcopy"){ try{ navigator.clipboard.writeText(document.getElementById("dmtext").textContent).then(()=>{document.getElementById("dmh").textContent="Message copied ✓";}); }catch(err){} } });
 const DATA = window.CATALOG || {books:[]};
-const BOOKS = DATA.books;
+const BOOKS = DATA.books.slice();
 const ST = {in:"Available",res:"Reserved",sold:"Sold · can be ordered again"};
 BOOKS.forEach(b=>{ if(b.st==="order") b.st="sold"; });
 const $ = s => document.querySelector(s);
@@ -206,7 +206,11 @@ const esc = s => String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">"
 const money = n => n+" "+SHOP.cur;
 let st = "in";
 
+function setup(){
 $("#stats").innerHTML = `<div><b>${BOOKS.filter(b=>b.st==="in").length}</b><span>available now</span></div><div><b>${BOOKS.filter(b=>b.st==="res").length}</b><span>reserved</span></div>`;
+const gv = $("#genre").value;
+if (genres.includes(gv)) $("#genre").value = gv;
+}
 if (DATA.updated) $("#upd").textContent = "List updated "+DATA.updated+".";
 
 const filters = [["in","Available"],["all","All"],["sold","Sold"]];
@@ -241,12 +245,14 @@ function media(b){
   const m = []; if (b.cover) m.push({k:"img",src:b.cover});
   (b.gallery||[]).forEach(s=>m.push({k:"img",src:s}));
   if (b.video) m.push({k:"vid",src:b.video});
+  if (b.dvid) m.push({k:"dvid",id:b.dvid,src:driveImg(b.dvid,400)});
   return m;
 }
 function drawMain(){
   const m = media(cur); const it = m[idx]; const box = $("#main");
   if (!it){ box.innerHTML = `<div class="ph">${esc(cur.t)}</div>`; return; }
   box.innerHTML = (it.k==="img" ? `<img src="${esc(it.src)}" alt="${esc(cur.t)}, photo ${idx+1}">`
+    : it.k==="dvid" ? `<iframe src="https://drive.google.com/file/d/${esc(it.id)}/preview" allow="autoplay; fullscreen" allowfullscreen title="Video"></iframe>`
     : `<video src="${esc(it.src)}" controls playsinline preload="metadata"></video>`)
     + (m.length>1 ? `<button class="nav l" data-d="-1" aria-label="Previous">‹</button><button class="nav r" data-d="1" aria-label="Next">›</button><span class="cnt">${idx+1} / ${m.length}</span>` : "");
   document.querySelectorAll(".thumbs button").forEach((t,i)=>t.setAttribute("aria-current",i===idx));
@@ -257,7 +263,7 @@ function open(id){
   const facts = [["Section",b.g],["Condition",b.cond],["Binding",b.binding],["Pages",b.pages],["Published",[b.publisher,b.year].filter(Boolean).join(", ")],["Price",`<b>${money(b.price)}</b>`],["Status",`<span class="st ${b.st}">${ST[b.st]}</span>`]].filter(f=>f[1]);
   $("#sheet").innerHTML = `<button class="x" id="close" aria-label="Close">×</button>
    <div class="gal"><div class="main" id="main"></div>
-     ${m.length>1?`<div class="thumbs">${m.map((it,i)=>`<button data-i="${i}" aria-label="Photo ${i+1}">${it.k==="img"?`<img src="${esc(it.src)}" alt="">`:`<video src="${esc(it.src)}#t=0.1" muted preload="metadata"></video><span class="play">▶</span>`}</button>`).join("")}</div>`:""}
+     ${m.length>1?`<div class="thumbs">${m.map((it,i)=>`<button data-i="${i}" aria-label="Photo ${i+1}">${it.k==="img"?`<img src="${esc(it.src)}" alt="">`:it.k==="dvid"?`<img src="${esc(it.src)}" alt=""><span class="play">▶</span>`:`<video src="${esc(it.src)}#t=0.1" muted preload="metadata"></video><span class="play">▶</span>`}</button>`).join("")}</div>`:""}
    </div>
    <div><h2 id="dt">${esc(b.t)}</h2>${b.a?`<div class="who">${esc(b.a)}</div>`:""}
    <dl>${facts.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
@@ -306,8 +312,68 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Escape") close();
   if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const m=media(cur).length; if(m>1){idx=(idx+(e.key==="ArrowRight"?1:-1)+m)%m; drawMain();}}
 });
+setup();
 render();
 openFromHash();
+// ===== Live data from the Google Sheet (statuses, prices, new books appear immediately) =====
+const SHEET = "https://docs.google.com/spreadsheets/d/1NX3OM70Y-nf-xDqwgeDSG3pVTbXnzZCqz6eBz_EYEsQ/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent("Каталог");
+const driveImg = (id, w) => `https://lh3.googleusercontent.com/d/${id}=w${w||1200}`;
+function parseCSV(t){ const rows=[]; let row=[], f="", q=false;
+  for (let i=0;i<t.length;i++){ const c=t[i];
+    if (q){ if (c==='"'){ if (t[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if (c==='"') q=true; else if (c===','){ row.push(f); f=""; }
+    else if (c==='\n'||c==='\r'){ if (c==='\r'&&t[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c; }
+  if (f!==""||row.length){ row.push(f); rows.push(row); } return rows; }
+const MAP_ST = {"в наличии":"in","наличие":"in","есть":"in","available":"in","бронь":"res","забронирована":"res","reserved":"res","продана":"sold","продано":"sold","sold":"sold","под заказ":"sold"};
+const MAP_COND = {"новая":"New","б/у, как новая":"Used, like new","б/у, очень хорошее":"Used, very good","б/у, хорошее":"Used, good","б/у, отличное":"Used, excellent","б/у, удовлетворительное":"Used, fair"};
+const MAP_SEC = {"детские":"Children","pop-up":"Pop-up","искусство и дизайн":"Art & design","каллиграфия":"Calligraphy & lettering","иллюстрированные для взрослых":"Illustrated for grown-ups","рождество":"Christmas","классика":"Classics","поэзия":"Poetry"};
+const MAP_BIND = {"твёрдый":"Hardcover","твердый":"Hardcover","мягкий":"Paperback"};
+function fromSheet(rows){
+  const H = rows[0].map(h=>h.trim().toLowerCase());
+  const ix = name => H.findIndex(h=>h.startsWith(name.toLowerCase()));
+  const C = {num:ix("№"),t:ix("Название"),a:ix("Автор"),g:ix("Раздел"),cond:ix("Состояние"),price:ix("Цена"),st:ix("Статус"),reel:ix("Ссылка на видео"),
+    pages:ix("Страниц"),bind:ix("Переплёт"),year:ix("Год"),pub:ix("Издательство"),about:ix("О книге"),note:ix("Заметка"),filled:ix("Описание заполнено"),ig:ix("Фото из Instagram"),ph:ix("Фото (служебное")};
+  if (C.t<0||C.st<0) return null;
+  const old = {}; DATA.books.forEach(b=>old[b.id]=b);
+  const out = [];
+  rows.slice(1).forEach((r,i)=>{
+    const v = k => C[k]>=0 ? String(r[C[k]]??"").trim() : "";
+    const t = v("t"); if (!t) return;
+    const num = v("num").replace(/\D/g,""); const id = num || ("row"+(i+2));
+    const o = old[id] || {};
+    const ph = v("ph").split(/[\s,;]+/).filter(Boolean);
+    const imgs = ph.filter(x=>!x.startsWith("v:")).map(x=>driveImg(x));
+    const dv = (ph.find(x=>x.startsWith("v:"))||"").slice(2);
+    const ig = v("ig");
+    const cover = imgs[0] || o.cover || (ig ? `img/${ig}.jpg` : "");
+    const price = parseInt(v("price").replace(/[^\d]/g,""),10) || 0;
+    const filled = v("filled").toLowerCase();
+    out.push({ id, num, order: num ? +num : 100000-i, t, a:v("a"),
+      g: MAP_SEC[v("g").toLowerCase()] || v("g") || "Other",
+      cond: MAP_COND[v("cond").toLowerCase()] || v("cond"), price,
+      st: MAP_ST[v("st").toLowerCase()] || "in",
+      cover, gallery: imgs.length ? imgs.slice(1) : (o.gallery||[]), video: imgs.length||dv ? "" : (o.video||""), dvid: dv,
+      reel: v("reel"), pages: v("pages"), binding: MAP_BIND[v("bind").toLowerCase()] || v("bind"), year: v("year"), publisher: v("pub"),
+      about: v("about"), note: v("note"), auto: filled==="авто" });
+  });
+  return out;
+}
+async function loadLive(){
+  try{
+    const ctl = new AbortController(); const tm = setTimeout(()=>ctl.abort(), 8000);
+    const res = await fetch(SHEET + "&_=" + Date.now(), {signal: ctl.signal, cache: "no-store"}); clearTimeout(tm);
+    if (!res.ok) throw new Error(res.status);
+    const books = fromSheet(parseCSV(await res.text()));
+    if (!books || !books.length) throw new Error("empty");
+    BOOKS.length = 0; books.forEach(b=>BOOKS.push(b));
+    $("#upd").textContent = "List is live from the shop's catalogue.";
+    setup(); render();
+    if (cur){ const again = BOOKS.find(b=>b.id===cur.id); if (again) open(again.id); }
+    else openFromHash();
+  }catch(e){ /* keep the saved copy (data.js) */ }
+}
+loadLive();
 }
 </script>
 </body>
