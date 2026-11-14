@@ -30,6 +30,10 @@ h1,h2{margin:0;text-wrap:balance}
 .top p.lead{max-width:60ch;margin:16px auto 0;color:var(--mut);position:relative}
 .top p.lead a{color:var(--pinkink);font-weight:600}
 .stats{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 32px;margin-top:22px;position:relative}
+.stat{all:unset;cursor:pointer;text-align:center;padding:6px 10px;border-radius:14px;transition:background .2s}
+.stat:hover,.stat:focus-visible{background:var(--pink2)}
+.stat:focus-visible{outline:2px solid var(--pink)}
+.stat span{text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:3px}
 .stats b{font-family:"Caveat Brush",cursive;font-weight:400;font-size:38px;color:var(--pink);display:block;line-height:1}
 .stats span{font-size:14px;color:var(--mut)}
 .bar{background:var(--bg);border-bottom:1px solid var(--line);padding:12px max(5vw,16px)}
@@ -206,7 +210,8 @@ const money = n => n+" "+SHOP.cur;
 let st = "in";
 
 function setup(){
-$("#stats").innerHTML = `<div><b>${BOOKS.filter(b=>b.st==="in").length}</b><span>available now</span></div><div><b>${BOOKS.filter(b=>b.st==="res").length}</b><span>reserved</span></div>`;
+const cnt = k => BOOKS.filter(b=>b.st===k).length;
+$("#stats").innerHTML = [["in","available now"],["sold","to pre-order"],["res","reserved"]].filter(([k])=>k!=="res"||cnt("res")).map(([k,l])=>`<button class="stat" data-k="${k}" type="button"><b>${cnt(k)}</b><span>${l}</span></button>`).join("");
 const gv = $("#genre").value;
 if (genres.includes(gv)) $("#genre").value = gv;
 }
@@ -226,7 +231,7 @@ const cover = (b, withSend) => `<div class="cov">
 function render(){
   const q = $("#q").value.trim().toLowerCase(), g = $("#genre").value, so = $("#sort").value;
   let list = BOOKS.filter(b =>
-    (st==="all" || (st==="in" ? b.st!=="sold" : b.st==="sold")) &&
+    (st==="all" || (st==="in" ? b.st!=="sold" : b.st===st)) &&
     (!g || b.g===g) &&
     (!q || (b.t+" "+b.a+" "+(b.about||"")).toLowerCase().includes(q)));
   list.sort((x,y)=> so==="cheap"?x.price-y.price : so==="dear"?y.price-x.price : so==="az"?x.t.localeCompare(y.t) : y.order-x.order);
@@ -291,6 +296,9 @@ async function copyLink(){
 function openFromHash(){ const id = location.hash.slice(1); if (id && BOOKS.some(b=>b.id===id)) { if (st==="in" && BOOKS.find(b=>b.id===id).st==="sold") { st="all"; document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.k===st)); render(); } open(id); } }
 window.addEventListener("hashchange", openFromHash);
 
+$("#stats").addEventListener("click",e=>{const k=e.target.closest(".stat")?.dataset.k; if(!k) return; st=k;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.k===st)); render();
+  document.querySelector(".bar").scrollIntoView({behavior:"smooth",block:"start"});});
 $("#stf").addEventListener("click",e=>{const k=e.target.closest(".chip")?.dataset.k; if(!k) return; st=k;
   document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.k===st)); render();});
 $("#q").addEventListener("input",render);
