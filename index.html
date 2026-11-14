@@ -137,7 +137,7 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
   <div class="wrap">
     <h1>Books in English <span>book store · Tbilisi</span></h1>
     <p class="sub">English books with history</p>
-    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy. Everything marked <b>available</b> is on the shelf right now. To reserve, message <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a>. Looking for something that isn't here? <a href="#find">I can find it for you</a>.</p>
+    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy. Everything marked <b>available</b> is on the shelf right now. To reserve, tap the paper plane on any book — it opens a WhatsApp chat with the book already in the message. Looking for something that isn't here? <a href="#find">I can find it for you</a>.</p>
     <div class="stats" id="stats"></div>
   </div>
 </header>
@@ -165,11 +165,11 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
     <p>Tell me the title — I'll search for it in the US and England and bring it to you in Tbilisi.</p>
     <p class="fee"><b>30&nbsp;₾</b> per order for my help with finding and delivering the books — the same whether it's one book or ten.</p>
     <p class="small">The price of the books and the shipping cost are paid separately.</p>
-    <div class="btns"><a class="btn" id="findbtn" href="https://ig.me/m/books_in_english_tbilisi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg> Ask for a book</a></div>
+    <div class="btns"><a class="btn" id="findbtn" href="https://wa.me/995591317434" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg> Ask for a book</a></div>
   </div>
 </div></section>
 <footer class="band foot"><div class="wrap">
-  To order or reserve, send a direct message on Instagram: <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a> · Pickup in Tbilisi or delivery across Georgia · Prices in Georgian lari.<br><span id="upd"></span>
+  To order or reserve, <a href="https://wa.me/995591317434">message me on WhatsApp</a> · Instagram: <a href="https://www.instagram.com/books_in_english_tbilisi/">@books_in_english_tbilisi</a> · Pickup in Tbilisi or delivery across Georgia · Prices in Georgian lari.<br><span id="upd"></span>
 </div></footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -185,11 +185,12 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
 <script src="data.js"></script>
 <script>
 {
-const SHOP = {ig:"books_in_english_tbilisi", cur:"₾", page:"https://miraclepo23.github.io/books-in-english/"};
+const SHOP = {wa:"995591317434", ig:"books_in_english_tbilisi", cur:"₾", page:"https://miraclepo23.github.io/books-in-english/"};
 const PLANE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>`;
 const bookLink = b => SHOP.page + "#" + b.id;
 const dmText = b => b.st==="sold" ? `Hi! I'd like to pre-order "${b.t}". — ${bookLink(b)}` : `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
-const dmLink = b => "https://ig.me/m/" + SHOP.ig + "?text=" + encodeURIComponent(dmText(b));
+const tgLink = txt => "https://wa.me/" + SHOP.wa + "?text=" + encodeURIComponent(txt);
+const dmLink = b => tgLink(dmText(b));
 let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),4000); }
 function primeDM(id){ const b=BOOKS.find(x=>x.id===id); if(!b) return; openDM(dmText(b)); }
 function copyText(txt){ // works in iOS Safari and in Instagram's in-app browser
@@ -206,7 +207,7 @@ function openDM(txt){
   const h=document.getElementById("dmh"); h.textContent="Copying…";
   copyText(txt).then(ok=>{ h.textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); });
   document.getElementById("dmveil").classList.add("on"); document.getElementById("dmgo").focus(); }
-document.getElementById("findbtn").addEventListener("click",e=>{ e.preventDefault(); openDM("Hi! I'm looking for a book: "); });
+document.getElementById("findbtn").href = tgLink("Hi! I'm looking for a book: ");
 function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
   if(e.target.id==="dmcopy"){ copyText(document.getElementById("dmtext").textContent).then(ok=>{ document.getElementById("dmh").textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); }); } });
@@ -236,7 +237,7 @@ const cover = (b, withSend) => `<div class="cov">
   ${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:`<div class="ph">${esc(b.t)}</div>`}
   ${b.st!=="in"?`<span class="tag">${ST[b.st]}</span>`:""}
   ${(b.video||b.reel)?`<span class="tag v">▶ video</span>`:""}
-  ${withSend?`<a class="send" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener" title="Send this book to the shop's Instagram DM" aria-label="Message the shop about ${esc(b.t)}">${PLANE}</a>`:""}</div>`;
+  ${withSend?`<a class="send" href="${dmLink(b)}" target="_blank" rel="noopener" title="Message the shop on WhatsApp about this book" aria-label="Message the shop about ${esc(b.t)}">${PLANE}</a>`:""}</div>`;
 
 function render(){
   const q = $("#q").value.trim().toLowerCase(), g = $("#genre").value, so = $("#sort").value;
@@ -286,7 +287,7 @@ function open(id){
    ${b.note?`<p class="note">${esc(b.note)}</p>`:""}
    ${b.st==="sold"?`<p class="auto">Available to pre-order: I'll order a copy for you. My help with finding and delivering costs <b>30&nbsp;₾</b> per order, however many books are in it; the books and shipping are paid separately.</p>`:""}
    <div class="btns">
-   <a class="btn" data-dm="${esc(b.id)}" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via Instagram":b.st==="sold"?"Pre-order via Instagram":"Join waiting list"}</a>
+   <a class="btn" href="${dmLink(b)}" target="_blank" rel="noopener">${PLANE} ${b.st==="in"?"Reserve via WhatsApp":b.st==="sold"?"Pre-order via WhatsApp":"Join waiting list"}</a>
    ${b.reel?`<a class="btn ghost" href="${esc(b.reel)}" target="_blank" rel="noopener">▶ Watch video</a>`:""}
    <button class="copy" id="copy" type="button">Copy link</button>
    </div>
@@ -314,7 +315,7 @@ $("#stf").addEventListener("click",e=>{const k=e.target.closest(".chip")?.datase
 $("#q").addEventListener("input",render);
 $("#genre").addEventListener("change",render);
 $("#sort").addEventListener("change",render);
-$("#grid").addEventListener("click",e=>{ const sd=e.target.closest(".send"); if(sd){ e.preventDefault(); primeDM(sd.dataset.dm); return; } const b=e.target.closest(".book"); if(b) open(b.dataset.id);});
+$("#grid").addEventListener("click",e=>{ if(e.target.closest(".send")) return; const b=e.target.closest(".book"); if(b) open(b.dataset.id);});
 $("#grid").addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("book")){ e.preventDefault(); open(e.target.dataset.id);} });
 $("#veil").addEventListener("click",e=>{
   if(e.target.id==="veil"||e.target.id==="close") return close();
