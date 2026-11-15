@@ -28,7 +28,8 @@ h1,h2{margin:0;text-wrap:balance}
 .top h1{font-family:"Caveat Brush",cursive;font-weight:400;font-size:clamp(54px,10vw,112px);line-height:.9;color:var(--ink);position:relative}
 .top h1 span{display:block;color:var(--pink);font-size:.62em;margin-top:.05em}
 .top .sub{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:14px 0 0;position:relative}
-.top p.lead{max-width:60ch;margin:16px auto 0;color:var(--mut);position:relative}
+.top p.lead{max-width:60ch;margin:16px auto 0;line-height:1.55;color:var(--mut);position:relative}
+.top p.lead+p.lead{margin-top:10px}
 .top p.lead a{color:var(--pinkink);font-weight:600}
 .stats{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 32px;margin-top:22px;position:relative}
 .stat{all:unset;cursor:pointer;text-align:center;padding:6px 10px;border-radius:14px;transition:background .2s}
@@ -137,7 +138,9 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
   <div class="wrap">
     <h1>Books in English <span>book store · Tbilisi</span></h1>
     <p class="sub">English books with history</p>
-    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy. Everything marked <b>available</b> is on the shelf right now. To reserve, tap the paper plane on any book — it opens a WhatsApp chat with the book already in the message. Looking for something that isn't here? <a href="#find">I can find it for you</a>.</p>
+    <p class="lead">Beautiful used and new books from the US and England: illustrated classics for children and grown-ups, pop-ups, art and calligraphy.</p>
+    <p class="lead">Everything marked <b>available</b> is on the shelf right now. To reserve, tap the paper plane on any book — it opens a WhatsApp chat with the book already in the message.</p>
+    <p class="lead">Looking for something that isn't here? <a href="#find">I can find it for you</a>.</p>
     <div class="stats" id="stats"></div>
   </div>
 </header>
