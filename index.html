@@ -242,7 +242,7 @@ $("#genre").innerHTML = `<option value="">All sections</option>`+genres.map(g=>`
 const cover = (b, withSend) => `<div class="cov">
   ${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:`<div class="ph">${esc(b.t)}</div>`}
   ${b.st!=="in"?`<span class="tag">${ST[b.st]}</span>`:""}
-  ${(b.video||b.reel)?`<span class="tag v">▶ video</span>`:""}
+  ${(b.video||b.reel||b.dvid)?`<span class="tag v">▶ video</span>`:""}
   ${withSend?`<a class="send" href="${dmLink(b)}" target="_blank" rel="noopener" title="Message the shop on WhatsApp about this book" aria-label="Message the shop about ${esc(b.t)}">${PLANE}</a>`:""}</div>`;
 
 function render(){
@@ -263,6 +263,7 @@ function render(){
 
 let cur = null, idx = 0;
 function media(b){
+  if (b.dlist && b.dlist.length) return b.dlist.map(x=> x.startsWith("v:") ? {k:"dvid",id:x.slice(2),src:driveImg(x.slice(2),400)} : {k:"img",src:driveImg(x)});
   const m = []; if (b.cover) m.push({k:"img",src:b.cover});
   (b.gallery||[]).forEach(s=>m.push({k:"img",src:s}));
   if (b.video) m.push({k:"vid",src:b.video});
@@ -378,7 +379,7 @@ function fromSheet(rows){
       g: MAP_SEC[v("g").toLowerCase()] || v("g") || "Other",
       cond: MAP_COND[v("cond").toLowerCase()] || v("cond"), price,
       st: MAP_ST[v("st").toLowerCase()] || "in",
-      cover, gallery: imgs.length ? imgs.slice(1) : (o.gallery||[]), video: imgs.length||dv ? "" : (o.video||""), dvid: dv,
+      cover, gallery: imgs.length ? imgs.slice(1) : (o.gallery||[]), video: imgs.length||dv ? "" : (o.video||""), dvid: dv, dlist: ph,
       reel: v("reel"), pages: v("pages"), binding: MAP_BIND[v("bind").toLowerCase()] || v("bind"), year: v("year"), publisher: v("pub"),
       about: v("about"), note: v("note"), auto: filled==="авто" });
   });
