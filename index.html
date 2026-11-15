@@ -182,10 +182,12 @@ a.btn.ghost{background:transparent;color:var(--pinkink);border:2px solid var(--p
 </div></div>
 <div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="dt"><div class="sheet" id="sheet"></div></div>
 
+<script data-goatcounter="https://booksinenglish.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script src="data.js"></script>
 <script>
 {
 const SHOP = {wa:"995591317434", ig:"books_in_english_tbilisi", cur:"₾", page:"https://miraclepo23.github.io/books-in-english/"};
+const track = (path, title) => { try{ if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path, title, event:true}); }catch(e){} };
 const PLANE = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>`;
 const bookLink = b => SHOP.page + "#" + b.id;
 const dmText = b => b.st==="sold" ? `Hi! I'd like to pre-order "${b.t}". — ${bookLink(b)}` : `Hi! I'd like to reserve "${b.t}" (${b.price} ${SHOP.cur}) — ${bookLink(b)}`;
@@ -208,6 +210,10 @@ function openDM(txt){
   copyText(txt).then(ok=>{ h.textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); });
   document.getElementById("dmveil").classList.add("on"); document.getElementById("dmgo").focus(); }
 document.getElementById("findbtn").href = tgLink("Hi! I'm looking for a book: ");
+document.addEventListener("click", e=>{ const a=e.target.closest('a[href^="https://wa.me/"]'); if(!a) return;
+  const bk=a.closest(".book")?.dataset.id || (cur && a.closest("#sheet") ? cur.id : "");
+  const b=BOOKS.find(x=>x.id===bk);
+  track(b ? "whatsapp-" + b.id : (a.id==="findbtn" ? "whatsapp-ask-for-book" : "whatsapp-other"), b ? "WhatsApp №" + b.id + " " + b.t : (a.id==="findbtn" ? "WhatsApp: ask for a book" : "WhatsApp: footer")); }, true);
 function closeDM(){ document.getElementById("dmveil").classList.remove("on"); }
 document.addEventListener("click",e=>{ if(e.target.id==="dmveil"||e.target.id==="dmclose") closeDM();
   if(e.target.id==="dmcopy"){ copyText(document.getElementById("dmtext").textContent).then(ok=>{ document.getElementById("dmh").textContent = ok ? "Message copied ✓" : "Hold the text below and tap Copy"; if(!ok) selectDM(); }); } });
@@ -294,6 +300,7 @@ function open(id){
    ${b.st==="res"?`<p style="color:var(--mut);margin:10px 0 0">This copy is reserved — message the shop to be next in line.</p>`:""}</div>`;
   drawMain();
   $("#veil").classList.add("on"); $("#close").focus();
+  if (!b._seen){ b._seen=1; track("book-" + b.id, "Opened №" + b.id + " " + b.t); }
   if (location.hash !== "#"+b.id) { try { history.replaceState(null, "", "#"+b.id); } catch(e){} }
 }
 const close = () => { $("#veil").classList.remove("on"); cur = null;
